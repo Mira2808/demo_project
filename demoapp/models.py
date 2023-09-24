@@ -49,6 +49,7 @@ class Products(models.Model):
     # category = models.CharField('category', max_length=50)
     category = models.ForeignKey(Category, on_delete=models.CASCADE, null=True, blank=True)
     stock = models.IntegerField(default=1)
+    image = models.ImageField(null=True, blank=True)
 
     def __str__(self):
         return self.name

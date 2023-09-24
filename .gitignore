@@ -1,3 +1,4 @@
 demo_project/__pycache__/
 demoapp/__pycache__/
 demoapp/migrations/__pycache__/
+.vscode/launch.json
