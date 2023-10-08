@@ -12,6 +12,7 @@
           <p class="card-text">{{product.category}}</p>
           <p class="card-text">{{product.stock}}</p>
           <a href="{% url 'update_products' product.id %}" class="btn btn-primary">Update info</a>
+          <a href="{% url 'delete_products' product.id %}" class="btn btn-danger">Delete Product</a>
         </div>
       </div>
       {% endfor %}

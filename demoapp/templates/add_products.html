@@ -26,7 +26,9 @@
                 <div class="form-group col-md-6">
                     <label for="category">Category</label>
                     <select type="text" class="form-control" name="category" id="category">
-                        <option value="Mobiles">Mobiles</option>
+                        {% for category in categories %}
+                        <option value="{{category}}" {% if product_details.category == category%}selected{%endif%}>{{category}}</option>
+                        {% endfor %}
                     </select>
                 </div>
             </div>
