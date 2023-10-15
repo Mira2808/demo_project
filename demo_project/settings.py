@@ -50,6 +50,8 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
+# https://docs.djangoproject.com/en/4.2/topics/auth/customizing/
+# AUTH_USER_MODEL = 'demoapp.MyUser'
 
 ROOT_URLCONF = 'demo_project.urls'
 
