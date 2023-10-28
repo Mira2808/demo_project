@@ -1,6 +1,6 @@
 from django.shortcuts import render, redirect
 from django.http import HttpResponse, JsonResponse
-from .models import Products, Category, UserProfile
+from .models import Products, Category, UserProfile, Cart
 from django.contrib.auth.models import User
 from django.contrib.auth import authenticate, login, logout
 import uuid
@@ -161,12 +161,29 @@ def user_logout(request):
 def add_to_cart(request):
     try:
         if request.method == "POST":
-            print("request received", request.POST.get('cart_value'))
-
+            print("request received", request.POST.get('product_id'), request.POST.get('cart_value'))
+            product_obj = Products.objects.filter(id=request.POST.get('product_id')).first()
+            user = User.objects.filter(id=request.user.id).first()
+            cart_obj = Cart(product=product_obj, user=user, quantity=request.POST.get('cart_value'))
+            cart_obj.save()
         return JsonResponse({"data": "successfully added"}, safe=False)
     except Exception as e:
+        print(e)
         return JsonResponse({"data": f"Something went wrong: {str(e)}"}, safe=False)
     
-    
+@csrf_exempt
+def cart_details(request):
+    cart_obj = Cart.objects.filter(user=request.user.id)
+    if request.method == "POST":
+        selected_products = request.POST.getlist('selected_products[]')
+        print(selected_products)
+        request.session['products_id'] = selected_products
+        return JsonResponse({"data": "Added into session"}, safe=False)
+    context = {"cart_obj": cart_obj}
+    return render(request, 'cart_details.html', context)
+
+
 def order_placed(request):
-    pass
+    if request.method == "POST":
+        pass
+    return render(request, 'order_placed.html')

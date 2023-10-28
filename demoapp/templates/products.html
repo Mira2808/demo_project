@@ -25,9 +25,9 @@
           <p class="card-text">{{product.price}}</p>
           <p class="card-text">{{product.category}}</p>
           <p class="card-text">{{product.stock}}</p>
-          <input type="number" class="card-text" value=1 id="cart_quantity" name="cart_quantity"></input>
+          <input type="number" class="card-text" value=1 id="cart_quantity_{{product.id}}" name="cart_quantity"></input>
           <br><br>
-          <button class="btn btn-primary" onclick="add_to_cart()">Add to cart</button>
+          <button class="btn btn-primary" onclick="add_to_cart({{product.id}})">Add to cart</button>
           <br><br>
           <a href="{% url 'update_products' product.id %}" class="btn btn-primary">Update info</a>
           <a href="{% url 'delete_products' product.id %}" class="btn btn-danger">Delete Product</a>
@@ -38,16 +38,16 @@
     </div>
     <script>
 
-      function add_to_cart(){
-        cart_value = document.getElementById('cart_quantity').value
-        console.log('button clicked', cart_value)
+      function add_to_cart(product_id){
+        cart_value = document.getElementById(`cart_quantity_${product_id}`).value
+        console.log('button clicked', cart_value, product_id)
 
         $.ajax({
             type:"POST",
             url: "{% url 'add_to_cart' %}",
-            contentType : "application/json",
             data:{
-                    "cart_value": cart_value
+                    "cart_value": cart_value,
+                    "product_id": product_id,
             },
             success: function( data ) 
             { 

@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<div class="toast" role="alert" aria-live="assertive" aria-atomic="true" id="element">
+  <div class="toast-header">
+    <img src="..." class="rounded me-2" alt="...">
+    <strong class="me-auto">Bootstrap</strong>
+    <small>11 mins ago</small>
+    <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
+  </div>
+  <div class="toast-body">
+    Hello, world! This is a toast message.
+  </div>
+</div>
+
+
+      <div class="container">
+      {% for product in cart_obj %}
+      <div class="card" style="width: 18rem;">
+        <div>
+        <input class="form-check-input" type="checkbox" value="" id="{{product.product.id}}" checked>
+        <label class="form-check-label" for="flexCheckChecked">
+        </label>
+      </div>
+        <img class="card-img-top" src="{{product.product.image.url}}" alt="Card image cap">
+        <div class="card-body">
+          <p class="card-text">{{product.product.name}}</p>
+          <p class="card-text">{{product.product.price}}</p>
+          <p class="card-text">{{product.quantity}}</p>
+          <br><br>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+
+
+    <div class="container" style="padding:20px">
+    <button class="btn btn-primary" onclick="place_order()">Buy Now</button>
+    </div>
+
+    <script>
+
+
+      function place_order() {
+        checks = document.querySelectorAll('input[type=checkbox]:checked');
+        selected_products = []
+
+        for (i=0; i < checks.length; i++) {
+          selected_products.push(checks[i].id)
+        }
+        $.ajax({
+          type:"POST",
+          url: "{% url 'cart_details' %}",
+          data:{
+                  "selected_products": selected_products
+                },
+          success: function( data ) 
+          { 
+            window.location = "{% url 'order_placed' %}"
+          }
+          //error: function(data){
+          // alert(data.status); // the status code
+         //}
+      })
+      }
+    </script>
+{% endblock content %}
