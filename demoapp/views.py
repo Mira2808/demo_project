@@ -1,10 +1,18 @@
 from django.shortcuts import render, redirect
-from django.http import HttpResponse
-from .models import Products, Category
+from django.http import HttpResponse, JsonResponse
+from .models import Products, Category, UserProfile
 from django.contrib.auth.models import User
 from django.contrib.auth import authenticate, login, logout
+import uuid
+from django.views.decorators.csrf import csrf_exempt
 
 # Create your views here.
+def global_user(request):
+    profile = ''
+    if request and request.user and request.user.id:
+        profile = UserProfile.objects.filter(user_model=request.user).first()
+    return profile
+
 def index(request):
     return HttpResponse("<h1>This is index</h1>")
 
@@ -39,7 +47,7 @@ def add_products(request):
                                   stock=stock, active=active,image=image)
         product_object.save()
         return redirect('products')     
-    context = {"categories": categories} 
+    context = {"categories": categories, "profile": global_user(request)} 
     return render(request, 'add_products.html', context=context)
 
 def products(request):
@@ -47,9 +55,9 @@ def products(request):
     # select * from products
     print(products)
 
-
     context = {
-        "products": products
+        "products": products,
+        "profile": global_user(request)
     }
     return render(request, 'products.html', context=context)
 
@@ -87,7 +95,7 @@ def update_products(request, product_id):
             product.image = image
             product.save()
         return redirect("products")
-    context = {"product_details": product_details, "categories": categories, "message":message}
+    context = {"product_details": product_details, "categories": categories, "message":message, "profile": global_user(request)}
     return render(request, 'update_products.html', context=context)
 
 def delete_products(request, product_id):
@@ -96,7 +104,7 @@ def delete_products(request, product_id):
         product.delete()
         return redirect("products")
         
-    context = {"product": product}
+    context = {"product": product, "profile": global_user(request)}
     return render(request, 'delete_products.html', context=context)
 
 def user_registration(request):
@@ -109,6 +117,12 @@ def user_registration(request):
         password = request.POST.get('password')
         confirmpassword = request.POST.get('confirmpassword')
 
+        contact_detail = request.POST.get('contact_details')
+        date_of_birth = request.POST.get('date_of_birth')
+        gender = request.POST.get('gender')
+        profile_image = request.FILES.get('profile_image')
+
+
         usern = User.objects.filter(username=username).first()
         usere = User.objects.filter(email=email).first()
         if usern:
@@ -119,9 +133,11 @@ def user_registration(request):
             message = "Password and confirm password doesnot matches"
         else:
             user = User.objects.create_user(username=username, first_name=firstname, last_name=lastname, email=email, password=password)
+            profile = UserProfile(contact_detail=contact_detail, date_of_birth=date_of_birth, gender=gender, profile_image=profile_image, user_model=user)
             user.save()
+            profile.save()
             return redirect("products")
-    context = {'message': message}
+    context = {'message': message, "profile": global_user(request)}
     return render(request, 'user_registration.html', context=context)
 
 def user_login(request):
@@ -134,9 +150,23 @@ def user_login(request):
         if user:
             login(request, user)
         return redirect("products")
-    context = {'message': message}
+    context = {'message': message, "profile": global_user(request)}
     return render(request, 'login.html', context=context)
 
 def user_logout(request):
     logout(request)
     return redirect('user_login') 
+
+@csrf_exempt
+def add_to_cart(request):
+    try:
+        if request.method == "POST":
+            print("request received", request.POST.get('cart_value'))
+
+        return JsonResponse({"data": "successfully added"}, safe=False)
+    except Exception as e:
+        return JsonResponse({"data": f"Something went wrong: {str(e)}"}, safe=False)
+    
+    
+def order_placed(request):
+    pass
