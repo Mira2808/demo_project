@@ -86,6 +86,10 @@ ORDER_STATUS = [
     ("Returned", "Returned"),
 ]
 class Orders(models.Model):
+    first_name = models.CharField(max_length=100, blank=True, null=True)
+    last_name = models.CharField(max_length=100, blank=True, null=True)
+    delivery_email = models.EmailField(blank=True, null=True)
+    delivery_contact = models.BigIntegerField(blank=True, null=True)
     order_number = models.CharField(max_length=100, blank=True, null=True)
     product = models.ForeignKey(Products, on_delete=models.CASCADE)
     user = models.ForeignKey(User, on_delete=models.CASCADE)

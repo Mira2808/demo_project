@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+    <div class="container">
+      {% for product in order_completed %}
+      <div class="card" style="width: 18rem;">
+        <img class="card-img-top" src="{{product.product.image.url}}" alt="Card image cap">
+        <div class="card-body">
+          <p class="card-text">Order number:  {{product.order_number}}</p>
+          <p class="card-text">Product name:  {{product.product.name}}</p>
+          <p class="card-text">Price: {{product.product.price}}</p>
+          <p class="card-text">Total amount: {{product.total_amount|slice:":-2"}}</p>
+          <br><br>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+
+{% endblock content %}

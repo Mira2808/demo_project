@@ -34,7 +34,7 @@
               <a class="nav-link" href="{% url 'cart_details' %}">Cart</a>
             </li>
             <li class="nav-item">
-              <a class="nav-link" href="#">Orders</a>
+              <a class="nav-link" href="{% url 'orders' %}">Orders</a>
             </li>
 
             {% if not user.is_authenticated %}

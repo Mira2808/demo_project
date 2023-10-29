@@ -1,10 +1,13 @@
 from django.shortcuts import render, redirect
 from django.http import HttpResponse, JsonResponse
-from .models import Products, Category, UserProfile, Cart
+from .models import Products, Category, UserProfile, Cart, Orders, Address
 from django.contrib.auth.models import User
 from django.contrib.auth import authenticate, login, logout
 import uuid
+import json
+from django.conf import settings
 from django.views.decorators.csrf import csrf_exempt
+import razorpay
 
 # Create your views here.
 def global_user(request):
@@ -184,6 +187,88 @@ def cart_details(request):
 
 
 def order_placed(request):
+    cart_products = request.session.get('products_id')
+    to_order = []
+    total_amount = 0
+    for order in cart_products:
+        product_object = Products.objects.filter(id=order).first()
+        cart_object = Cart.objects.filter(product=order).filter(user=request.user.id).first() 
+        to_order.append(cart_object)
+        total_amount += product_object.price * cart_object.quantity
+
+
+    request.session['total_amount'] = total_amount
+    context = {"to_order": to_order, "total_amount": total_amount}
     if request.method == "POST":
         pass
-    return render(request, 'order_placed.html')
+    return render(request, 'order_placed.html', context= context)
+
+def generate_order(request, firstname, lastname, email, phone, order_number, user_obj, amount, address_obj, payment):
+    cart_products = request.session.get('products_id')
+    for order in cart_products:
+        product_object = Products.objects.filter(id=order).first()
+        order_placed_object = Orders.objects.create(first_name=firstname, last_name=lastname, 
+                                                    delivery_email=email, delivery_contact=phone, 
+                                                    order_number=order_number, product=product_object, user=user_obj, 
+                                                    total_amount=float(amount/100), address=address_obj, payment_terms=payment, 
+                                                    order_status="Order Placed")
+        order_placed_object.save()
+        cart_object = Cart.objects.filter(product=order).filter(user=request.user.id).first()
+        cart_object.delete()
+
+@csrf_exempt
+def create_payment(request, payment):
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            firstname = data['firstname']
+            lastname = data['lastname']
+            address = data['address']
+            email = data['email']
+            phone = data['phone']
+            line2 = data['line2']
+            zipcode = data['zipcode']
+            city = data['city']
+            state = data['state']
+            amount = int(data['amount'])  # Amount in paisa
+            order_number = str(uuid.uuid4())
+
+            address_obj = Address.objects.create(line1=address, line2=line2, zip_code=zipcode, city=city, state=state)
+            address_obj.save()
+            user_obj = User.objects.filter(id=request.user.id).first()
+
+            if payment in ["COD", "EMI"]:
+                generate_order(request, firstname, lastname, email, phone, order_number, user_obj, amount, address_obj, payment)
+                order = {'id': order_number}
+            else:
+                client = razorpay.Client(auth=(settings.RAZORPAY_API_KEY, settings.RAZORPAY_API_SECRET))
+                data = {
+                    'amount': amount,
+                    'currency': 'INR',
+                    'receipt': 'order_rcptid_11',
+                    'payment_capture': 1  # Auto-capture the payment
+                }
+                order = client.order.create(data=data)
+                generate_order(request, firstname, lastname, email, phone, order_number, user_obj, amount, address_obj, payment)
+
+
+            return JsonResponse({
+                'key': settings.RAZORPAY_API_KEY,
+                'amount': amount,
+                'description': 'test',
+                'email': email,
+                'id': order.get('id')
+            })
+
+        except Exception as e:
+            return JsonResponse({'error': str(e)}, status=400)
+
+    return JsonResponse({'error': 'Invalid request method'}, status=400)
+
+def orders(request):
+    order_completed = Orders.objects.filter(user=request.user.id)
+    context = {"order_completed": order_completed}
+    return render(request, 'orders.html', context=context)
+
+def test(request):
+    return render(request, 'create_payment.html')
